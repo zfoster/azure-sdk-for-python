@@ -2,9 +2,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 # ------------------------------------
-from collections import namedtuple
-import os
 import time
+import random
+
+from string import ascii_letters
 
 from azure.mgmt.keyvault import KeyVaultManagementClient
 from azure.mgmt.keyvault.models import (
@@ -22,7 +23,7 @@ from azure.mgmt.keyvault.models import (
 
 from azure_devtools.scenario_tests.exceptions import AzureTestError
 
-from . import AzureMgmtPreparer, ResourceGroupPreparer, FakeResource
+from . import AzureMgmtPreparer, ResourceGroupPreparer
 from .resource_testcase import RESOURCE_GROUP_PARAM
 
 
@@ -38,7 +39,7 @@ CLIENT_OID = "00000000-0000-0000-0000-000000000000"
 class KeyVaultPreparer(AzureMgmtPreparer):
     def __init__(
         self,
-        name_prefix='vault',
+        name_prefix=random.choice(ascii_letters).lower(),
         sku=DEFAULT_SKU,
         permissions=DEFAULT_PERMISSIONS,
         enabled_for_deployment=True,
@@ -68,7 +69,7 @@ class KeyVaultPreparer(AzureMgmtPreparer):
         self.resource_group_parameter_name = resource_group_parameter_name
         self.parameter_name = parameter_name
         if random_name_enabled:
-            self.resource_moniker = self.name_prefix
+            self.resource_moniker = "vaultname"
         self.client_oid = None
 
     def create_resource(self, name, **kwargs):
@@ -101,6 +102,7 @@ class KeyVaultPreparer(AzureMgmtPreparer):
             for i in range(retries):
                 try:
                     vault = self.client.vaults.create_or_update(group, name, parameters).result()
+                    break
                 except Exception as ex:
                     if "ResourceGroupNotFound" not in str(ex) or i == retries - 1:
                         raise
