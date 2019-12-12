@@ -21,7 +21,7 @@ from azure.mgmt.keyvault.models import (
     VaultCreateOrUpdateParameters,
 )
 
-from azure_devtools.scenario_tests.exceptions import AzureTestError #, NameInUseError
+from azure_devtools.scenario_tests.exceptions import AzureTestError, NameInUseError
 
 from . import AzureMgmtPreparer, ResourceGroupPreparer
 from .resource_testcase import RESOURCE_GROUP_PARAM
@@ -39,7 +39,7 @@ CLIENT_OID = "00000000-0000-0000-0000-000000000000"
 class KeyVaultPreparer(AzureMgmtPreparer):
     def __init__(
         self,
-        name_prefix='v',
+        name_prefix=random.choice(ascii_letters).lower(),
         sku=DEFAULT_SKU,
         permissions=DEFAULT_PERMISSIONS,
         enabled_for_deployment=True,
@@ -104,8 +104,8 @@ class KeyVaultPreparer(AzureMgmtPreparer):
                     vault = self.client.vaults.create_or_update(group, name, parameters).result()
                     break
                 except Exception as ex:
-                    # if "VaultAlreadyExists" in str(ex):
-                    #     raise NameInUseError("The name {} is already in use.".format(name))
+                    if "VaultAlreadyExists" in str(ex):
+                        raise NameInUseError("The name {} is already in use.".format(name))
                     if "ResourceGroupNotFound" not in str(ex) or i == retries - 1:
                         raise
                     time.sleep(3)
