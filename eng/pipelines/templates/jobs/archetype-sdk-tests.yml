@@ -12,13 +12,13 @@ parameters:
       OSName: 'Linux'
       OSVmImage: 'ubuntu-16.04'
       PythonVersion: '3.5'
-    MacOs_Python37:
-      OSName: 'MacOS'
-      OSVmImage: 'macOS-10.14'
+    Linux_Python37:
+      OSName: 'Linux'
+      OSVmImage: 'ubuntu-16.04'
       PythonVersion: '3.7'
-    Windows_Python27:
-      OSName: 'Windows'
-      OSVmImage: 'windows-2019'
+    Linux_Python27:
+      OSName: 'Linux'
+      OSVmImage: 'ubuntu-16.04'
       PythonVersion: '2.7'
     Linux_PyPy3:
       OSName: 'Linux'
