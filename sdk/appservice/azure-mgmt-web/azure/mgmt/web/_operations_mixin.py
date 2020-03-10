@@ -58,7 +58,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.check_name_availability(name, type, is_fqdn, **kwargs)
 
     def get_publishing_user(
@@ -88,7 +87,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.get_publishing_user(**kwargs)
 
     def get_source_control(
@@ -121,7 +119,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.get_source_control(source_control_type, **kwargs)
 
     def get_subscription_deployment_locations(
@@ -151,7 +148,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.get_subscription_deployment_locations(**kwargs)
 
     def list_billing_meters(
@@ -185,7 +181,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.list_billing_meters(billing_location, os_type, **kwargs)
 
     def list_geo_regions(
@@ -230,7 +225,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.list_geo_regions(sku, linux_workers_enabled, xenon_workers_enabled, linux_dynamic_workers_enabled, **kwargs)
 
     def list_premier_add_on_offers(
@@ -260,7 +254,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.list_premier_add_on_offers(**kwargs)
 
     def list_site_identifiers_assigned_to_host_name(
@@ -293,7 +286,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.list_site_identifiers_assigned_to_host_name(name, **kwargs)
 
     def list_skus(
@@ -323,7 +315,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.list_skus(**kwargs)
 
     def list_source_controls(
@@ -353,7 +344,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.list_source_controls(**kwargs)
 
     def move(
@@ -392,7 +382,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.move(resource_group_name, target_resource_group, resources, **kwargs)
 
     def update_publishing_user(
@@ -425,7 +414,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.update_publishing_user(user_details, **kwargs)
 
     def update_source_control(
@@ -461,7 +449,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.update_source_control(source_control_type, request_message, **kwargs)
 
     def validate(
@@ -497,7 +484,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.validate(resource_group_name, validate_request, **kwargs)
 
     def validate_container_settings(
@@ -529,7 +515,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.validate_container_settings(resource_group_name, validate_container_settings_request, **kwargs)
 
     def validate_move(
@@ -568,7 +553,6 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.validate_move(resource_group_name, target_resource_group, resources, **kwargs)
 
     def verify_hosting_environment_vnet(
@@ -602,5 +586,4 @@ class WebSiteManagementClientOperationsMixin(object):
         mixin_instance._config = self._config
         mixin_instance._serialize = Serializer(self._models_dict(api_version))
         mixin_instance._deserialize = Deserializer(self._models_dict(api_version))
-        mixin_instance.api_version = api_version
         return mixin_instance.verify_hosting_environment_vnet(parameters, **kwargs)
