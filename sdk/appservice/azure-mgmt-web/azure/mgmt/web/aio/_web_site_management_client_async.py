@@ -35,7 +35,7 @@ class WebSiteManagementClient(WebSiteManagementClientOperationsMixin, MultiApiCl
     group is not described in the profile.
 
     :param credential: Credential needed for the client to connect to Azure.
-    :type credential: azure.core.credentials.TokenCredential
+    :type credential: azure.core.credentials.AsyncTokenCredential
     :param subscription_id: Subscription credential which uniquely identify
      Microsoft Azure subscription. The subscription ID forms part of the URI
      for every service call.

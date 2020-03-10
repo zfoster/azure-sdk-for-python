@@ -6,13 +6,28 @@
 # license information.
 #--------------------------------------------------------------------------
 
-import unittest
-import pytest
+import asyncio
+import functools
 
 import azure.mgmt.web.aio
 from devtools_testutils import AzureMgmtTestCase, ResourceGroupPreparer
 
 AZURE_LOCATION = 'eastus'
+
+
+def await_prepared_test(test_fn):
+    """Synchronous wrapper for async test methods. Used to avoid making changes
+    upstream to AbstractPreparer (which doesn't await the functions it wraps)
+    """
+
+    @functools.wraps(test_fn)
+    def run(test_class_instance, *args, **kwargs):
+        loop = asyncio.get_event_loop()
+        resource_group = kwargs.get("resource_group")
+        result = loop.run_until_complete(test_fn(test_class_instance, resource_group))
+        return result
+
+    return run
 
 class MgmtWebSiteTest(AzureMgmtTestCase):
 
@@ -23,7 +38,7 @@ class MgmtWebSiteTest(AzureMgmtTestCase):
         )
 
     @ResourceGroupPreparer(location=AZURE_LOCATION)
-    @pytest.mark.asyncio
+    @await_prepared_test
     async def test_appservice(self, resource_group):
 
         SERVERFARM_NAME = "myapimrndxyz"
@@ -38,11 +53,7 @@ class MgmtWebSiteTest(AzureMgmtTestCase):
             "capacity": "1"
           }
         }
-        azure_operation_poller = await self.mgmt_client.app_service_plans.create_or_update(resource_group.name, SERVERFARM_NAME, BODY)
 
-        self.mgmt_client.list_skus()
+        await self.mgmt_client.app_service_plans.create_or_update(resource_group.name, SERVERFARM_NAME, BODY)
 
-
-#------------------------------------------------------------------------------
-if __name__ == '__main__':
-    unittest.main()
+        await self.mgmt_client.list_skus()
