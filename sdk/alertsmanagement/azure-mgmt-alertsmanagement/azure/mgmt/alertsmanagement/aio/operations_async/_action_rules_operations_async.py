@@ -8,19 +8,19 @@
 from typing import Any, Callable, Dict, Generic, Optional, TypeVar, Union
 import warnings
 
+from azure.core.async_paging import AsyncItemPaged, AsyncList
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, map_error
-from azure.core.paging import ItemPaged
 from azure.core.pipeline import PipelineResponse
-from azure.core.pipeline.transport import HttpRequest, HttpResponse
+from azure.core.pipeline.transport import AsyncHttpResponse, HttpRequest
 from azure.mgmt.core.exceptions import ARMErrorFormat
 
-from .. import models
+from ... import models
 
 T = TypeVar('T')
-ClsType = Optional[Callable[[PipelineResponse[HttpRequest, HttpResponse], T, Dict[str, Any]], Any]]
+ClsType = Optional[Callable[[PipelineResponse[HttpRequest, AsyncHttpResponse], T, Dict[str, Any]], Any]]
 
-class ActionRulesOperations(object):
-    """ActionRulesOperations operations.
+class ActionRulesOperations:
+    """ActionRulesOperations async operations.
 
     You should not instantiate this class directly. Instead, you should create a Client instance that
     instantiates it for you and attaches it as an attribute.
@@ -35,7 +35,7 @@ class ActionRulesOperations(object):
 
     models = models
 
-    def __init__(self, client, config, serializer, deserializer):
+    def __init__(self, client, config, serializer, deserializer) -> None:
         self._client = client
         self._serialize = serializer
         self._deserialize = deserializer
@@ -43,19 +43,18 @@ class ActionRulesOperations(object):
 
     def list_by_subscription(
         self,
-        target_resource_group=None,  # type: Optional[str]
-        target_resource_type=None,  # type: Optional[str]
-        target_resource=None,  # type: Optional[str]
-        severity=None,  # type: Optional[Union[str, "models.Severity"]]
-        monitor_service=None,  # type: Optional[Union[str, "models.MonitorService"]]
-        impacted_scope=None,  # type: Optional[str]
-        description=None,  # type: Optional[str]
-        alert_rule_id=None,  # type: Optional[str]
-        action_group=None,  # type: Optional[str]
-        name=None,  # type: Optional[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.ActionRulesList"
+        target_resource_group: Optional[str] = None,
+        target_resource_type: Optional[str] = None,
+        target_resource: Optional[str] = None,
+        severity: Optional[Union[str, "models.Severity"]] = None,
+        monitor_service: Optional[Union[str, "models.MonitorService"]] = None,
+        impacted_scope: Optional[str] = None,
+        description: Optional[str] = None,
+        alert_rule_id: Optional[str] = None,
+        action_group: Optional[str] = None,
+        name: Optional[str] = None,
+        **kwargs
+    ) -> "models.ActionRulesList":
         """List all action rules of the subscription and given input filters.
 
         Get all action rule in a given subscription.
@@ -136,17 +135,17 @@ class ActionRulesOperations(object):
             request = self._client.get(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('ActionRulesList', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -156,27 +155,26 @@ class ActionRulesOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     list_by_subscription.metadata = {'url': '/subscriptions/{subscriptionId}/providers/Microsoft.AlertsManagement/actionRules'}
 
     def list_by_resource_group(
         self,
-        resource_group_name,  # type: str
-        target_resource_group=None,  # type: Optional[str]
-        target_resource_type=None,  # type: Optional[str]
-        target_resource=None,  # type: Optional[str]
-        severity=None,  # type: Optional[Union[str, "models.Severity"]]
-        monitor_service=None,  # type: Optional[Union[str, "models.MonitorService"]]
-        impacted_scope=None,  # type: Optional[str]
-        description=None,  # type: Optional[str]
-        alert_rule_id=None,  # type: Optional[str]
-        action_group=None,  # type: Optional[str]
-        name=None,  # type: Optional[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.ActionRulesList"
+        resource_group_name: str,
+        target_resource_group: Optional[str] = None,
+        target_resource_type: Optional[str] = None,
+        target_resource: Optional[str] = None,
+        severity: Optional[Union[str, "models.Severity"]] = None,
+        monitor_service: Optional[Union[str, "models.MonitorService"]] = None,
+        impacted_scope: Optional[str] = None,
+        description: Optional[str] = None,
+        alert_rule_id: Optional[str] = None,
+        action_group: Optional[str] = None,
+        name: Optional[str] = None,
+        **kwargs
+    ) -> "models.ActionRulesList":
         """List all action rules of the subscription, created in given resource group and given input filters.
 
         Get all action rules created in a resource group.
@@ -260,17 +258,17 @@ class ActionRulesOperations(object):
             request = self._client.get(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('ActionRulesList', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -280,18 +278,17 @@ class ActionRulesOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     list_by_resource_group.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.AlertsManagement/actionRules'}
 
-    def get_by_name(
+    async def get_by_name(
         self,
-        resource_group_name,  # type: str
-        action_rule_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.ActionRule"
+        resource_group_name: str,
+        action_rule_name: str,
+        **kwargs
+    ) -> "models.ActionRule":
         """Get a specific action rule.
 
         Get action rule by name.
@@ -328,7 +325,7 @@ class ActionRulesOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -346,14 +343,13 @@ class ActionRulesOperations(object):
         return deserialized
     get_by_name.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.AlertsManagement/actionRules/{actionRuleName}'}
 
-    def create_update(
+    async def create_update(
         self,
-        resource_group_name,  # type: str
-        action_rule_name,  # type: str
-        action_rule,  # type: "models.ActionRule"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.ActionRule"
+        resource_group_name: str,
+        action_rule_name: str,
+        action_rule: "models.ActionRule",
+        **kwargs
+    ) -> "models.ActionRule":
         """Creates/Updates a specific action rule.
 
         Create/update an action rule.
@@ -398,7 +394,7 @@ class ActionRulesOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.put(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -416,13 +412,12 @@ class ActionRulesOperations(object):
         return deserialized
     create_update.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.AlertsManagement/actionRules/{actionRuleName}'}
 
-    def delete(
+    async def delete(
         self,
-        resource_group_name,  # type: str
-        action_rule_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> bool
+        resource_group_name: str,
+        action_rule_name: str,
+        **kwargs
+    ) -> bool:
         """Deletes a given action rule.
 
         Delete action rule.
@@ -459,7 +454,7 @@ class ActionRulesOperations(object):
 
         # Construct and send request
         request = self._client.delete(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -477,15 +472,14 @@ class ActionRulesOperations(object):
         return deserialized
     delete.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.AlertsManagement/actionRules/{actionRuleName}'}
 
-    def update(
+    async def update(
         self,
-        resource_group_name,  # type: str
-        action_rule_name,  # type: str
-        tags=None,  # type: Optional[object]
-        status=None,  # type: Optional[Union[str, "models.ActionRuleStatus"]]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.ActionRule"
+        resource_group_name: str,
+        action_rule_name: str,
+        tags: Optional[object] = None,
+        status: Optional[Union[str, "models.ActionRuleStatus"]] = None,
+        **kwargs
+    ) -> "models.ActionRule":
         """Update enabled flag and/or tags for the given action rule.
 
         Patch action rule.
@@ -534,7 +528,7 @@ class ActionRulesOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.patch(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:

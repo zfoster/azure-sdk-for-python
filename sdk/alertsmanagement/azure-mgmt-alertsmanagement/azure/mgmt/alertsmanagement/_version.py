@@ -6,16 +6,4 @@
 # Changes may cause incorrect behavior and will be lost if the code is regenerated.
 # --------------------------------------------------------------------------
 
-from ._operations import Operations
-from ._alerts_operations import AlertsOperations
-from ._smart_groups_operations import SmartGroupsOperations
-from ._action_rules_operations import ActionRulesOperations
-from ._smart_detector_alert_rules_operations import SmartDetectorAlertRulesOperations
-
-__all__ = [
-    'Operations',
-    'AlertsOperations',
-    'SmartGroupsOperations',
-    'ActionRulesOperations',
-    'SmartDetectorAlertRulesOperations',
-]
+VERSION = "0.1.0"

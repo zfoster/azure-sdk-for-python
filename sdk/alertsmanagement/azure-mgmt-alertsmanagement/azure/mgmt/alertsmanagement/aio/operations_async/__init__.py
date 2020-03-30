@@ -6,11 +6,11 @@
 # Changes may cause incorrect behavior and will be lost if the code is regenerated.
 # --------------------------------------------------------------------------
 
-from ._operations import Operations
-from ._alerts_operations import AlertsOperations
-from ._smart_groups_operations import SmartGroupsOperations
-from ._action_rules_operations import ActionRulesOperations
-from ._smart_detector_alert_rules_operations import SmartDetectorAlertRulesOperations
+from ._operations_async import Operations
+from ._alerts_operations_async import AlertsOperations
+from ._smart_groups_operations_async import SmartGroupsOperations
+from ._action_rules_operations_async import ActionRulesOperations
+from ._smart_detector_alert_rules_operations_async import SmartDetectorAlertRulesOperations
 
 __all__ = [
     'Operations',

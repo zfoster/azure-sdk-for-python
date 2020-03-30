@@ -8,19 +8,19 @@
 from typing import Any, Callable, Dict, Generic, Optional, TypeVar, Union
 import warnings
 
+from azure.core.async_paging import AsyncItemPaged, AsyncList
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, map_error
-from azure.core.paging import ItemPaged
 from azure.core.pipeline import PipelineResponse
-from azure.core.pipeline.transport import HttpRequest, HttpResponse
+from azure.core.pipeline.transport import AsyncHttpResponse, HttpRequest
 from azure.mgmt.core.exceptions import ARMErrorFormat
 
-from .. import models
+from ... import models
 
 T = TypeVar('T')
-ClsType = Optional[Callable[[PipelineResponse[HttpRequest, HttpResponse], T, Dict[str, Any]], Any]]
+ClsType = Optional[Callable[[PipelineResponse[HttpRequest, AsyncHttpResponse], T, Dict[str, Any]], Any]]
 
-class SmartDetectorAlertRulesOperations(object):
-    """SmartDetectorAlertRulesOperations operations.
+class SmartDetectorAlertRulesOperations:
+    """SmartDetectorAlertRulesOperations async operations.
 
     You should not instantiate this class directly. Instead, you should create a Client instance that
     instantiates it for you and attaches it as an attribute.
@@ -35,7 +35,7 @@ class SmartDetectorAlertRulesOperations(object):
 
     models = models
 
-    def __init__(self, client, config, serializer, deserializer):
+    def __init__(self, client, config, serializer, deserializer) -> None:
         self._client = client
         self._serialize = serializer
         self._deserialize = deserializer
@@ -43,10 +43,9 @@ class SmartDetectorAlertRulesOperations(object):
 
     def list(
         self,
-        expand_detector=None,  # type: Optional[bool]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.AlertRulesList"
+        expand_detector: Optional[bool] = None,
+        **kwargs
+    ) -> "models.AlertRulesList":
         """List all the existing Smart Detector alert rules within the subscription.
 
         :param expand_detector: Indicates if Smart Detector should be expanded.
@@ -85,17 +84,17 @@ class SmartDetectorAlertRulesOperations(object):
             request = self._client.get(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('AlertRulesList', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -105,18 +104,17 @@ class SmartDetectorAlertRulesOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     list.metadata = {'url': '/subscriptions/{subscriptionId}/providers/microsoft.alertsManagement/smartDetectorAlertRules'}
 
     def list_by_resource_group(
         self,
-        resource_group_name,  # type: str
-        expand_detector=None,  # type: Optional[bool]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.AlertRulesList"
+        resource_group_name: str,
+        expand_detector: Optional[bool] = None,
+        **kwargs
+    ) -> "models.AlertRulesList":
         """List all the existing Smart Detector alert rules within the subscription and resource group.
 
         :param resource_group_name: The name of the resource group.
@@ -158,17 +156,17 @@ class SmartDetectorAlertRulesOperations(object):
             request = self._client.get(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('AlertRulesList', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -178,19 +176,18 @@ class SmartDetectorAlertRulesOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     list_by_resource_group.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.alertsManagement/smartDetectorAlertRules'}
 
-    def get(
+    async def get(
         self,
-        resource_group_name,  # type: str
-        alert_rule_name,  # type: str
-        expand_detector=None,  # type: Optional[bool]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.AlertRule"
+        resource_group_name: str,
+        alert_rule_name: str,
+        expand_detector: Optional[bool] = None,
+        **kwargs
+    ) -> "models.AlertRule":
         """Get a specific Smart Detector alert rule.
 
         :param resource_group_name: The name of the resource group.
@@ -229,7 +226,7 @@ class SmartDetectorAlertRulesOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -245,14 +242,13 @@ class SmartDetectorAlertRulesOperations(object):
         return deserialized
     get.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.alertsManagement/smartDetectorAlertRules/{alertRuleName}'}
 
-    def create_or_update(
+    async def create_or_update(
         self,
-        resource_group_name,  # type: str
-        alert_rule_name,  # type: str
-        parameters,  # type: "models.AlertRule"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.AlertRule"
+        resource_group_name: str,
+        alert_rule_name: str,
+        parameters: "models.AlertRule",
+        **kwargs
+    ) -> "models.AlertRule":
         """Create or update a Smart Detector alert rule.
 
         :param resource_group_name: The name of the resource group.
@@ -295,7 +291,7 @@ class SmartDetectorAlertRulesOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.put(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 201]:
@@ -316,14 +312,13 @@ class SmartDetectorAlertRulesOperations(object):
         return deserialized
     create_or_update.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.alertsManagement/smartDetectorAlertRules/{alertRuleName}'}
 
-    def patch(
+    async def patch(
         self,
-        resource_group_name,  # type: str
-        alert_rule_name,  # type: str
-        parameters,  # type: "models.AlertRulePatchObject"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.AlertRule"
+        resource_group_name: str,
+        alert_rule_name: str,
+        parameters: "models.AlertRulePatchObject",
+        **kwargs
+    ) -> "models.AlertRule":
         """Patch a specific Smart Detector alert rule.
 
         :param resource_group_name: The name of the resource group.
@@ -366,7 +361,7 @@ class SmartDetectorAlertRulesOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.patch(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -382,13 +377,12 @@ class SmartDetectorAlertRulesOperations(object):
         return deserialized
     patch.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.alertsManagement/smartDetectorAlertRules/{alertRuleName}'}
 
-    def delete(
+    async def delete(
         self,
-        resource_group_name,  # type: str
-        alert_rule_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> None
+        resource_group_name: str,
+        alert_rule_name: str,
+        **kwargs
+    ) -> None:
         """Delete an existing Smart Detector alert rule.
 
         :param resource_group_name: The name of the resource group.
@@ -422,7 +416,7 @@ class SmartDetectorAlertRulesOperations(object):
 
         # Construct and send request
         request = self._client.delete(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 204]:

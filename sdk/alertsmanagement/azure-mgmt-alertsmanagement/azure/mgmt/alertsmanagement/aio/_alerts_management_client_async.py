@@ -8,31 +8,31 @@
 
 from typing import Any, Optional
 
-from azure.mgmt.core import ARMPipelineClient
+from azure.mgmt.core import AsyncARMPipelineClient
 from msrest import Deserializer, Serializer
 
-from ._configuration import AlertsManagementClientConfiguration
-from .operations import Operations
-from .operations import AlertsOperations
-from .operations import SmartGroupsOperations
-from .operations import ActionRulesOperations
-from .operations import SmartDetectorAlertRulesOperations
-from . import models
+from ._configuration_async import AlertsManagementClientConfiguration
+from .operations_async import Operations
+from .operations_async import AlertsOperations
+from .operations_async import SmartGroupsOperations
+from .operations_async import ActionRulesOperations
+from .operations_async import SmartDetectorAlertRulesOperations
+from .. import models
 
 
 class AlertsManagementClient(object):
     """AlertsManagement Client.
 
     :ivar operations: Operations operations
-    :vartype operations: azure.mgmt.alertsmanagement.operations.Operations
+    :vartype operations: azure.mgmt.alertsmanagement.aio.operations_async.Operations
     :ivar alerts: AlertsOperations operations
-    :vartype alerts: azure.mgmt.alertsmanagement.operations.AlertsOperations
+    :vartype alerts: azure.mgmt.alertsmanagement.aio.operations_async.AlertsOperations
     :ivar smart_groups: SmartGroupsOperations operations
-    :vartype smart_groups: azure.mgmt.alertsmanagement.operations.SmartGroupsOperations
+    :vartype smart_groups: azure.mgmt.alertsmanagement.aio.operations_async.SmartGroupsOperations
     :ivar action_rules: ActionRulesOperations operations
-    :vartype action_rules: azure.mgmt.alertsmanagement.operations.ActionRulesOperations
+    :vartype action_rules: azure.mgmt.alertsmanagement.aio.operations_async.ActionRulesOperations
     :ivar smart_detector_alert_rules: SmartDetectorAlertRulesOperations operations
-    :vartype smart_detector_alert_rules: azure.mgmt.alertsmanagement.operations.SmartDetectorAlertRulesOperations
+    :vartype smart_detector_alert_rules: azure.mgmt.alertsmanagement.aio.operations_async.SmartDetectorAlertRulesOperations
     :param credential: Credential needed for the client to connect to Azure.
     :type credential: azure.core.credentials.TokenCredential
     :param subscription_id: The ID of the target subscription.
@@ -42,16 +42,15 @@ class AlertsManagementClient(object):
 
     def __init__(
         self,
-        credential,  # type: "TokenCredential"
-        subscription_id,  # type: str
-        base_url=None,  # type: Optional[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> None
+        credential: "TokenCredential",
+        subscription_id: str,
+        base_url: Optional[str] = None,
+        **kwargs: Any
+    ) -> None:
         if not base_url:
             base_url = 'https://management.azure.com'
         self._config = AlertsManagementClientConfiguration(credential, subscription_id, **kwargs)
-        self._client = ARMPipelineClient(base_url=base_url, config=self._config, **kwargs)
+        self._client = AsyncARMPipelineClient(base_url=base_url, config=self._config, **kwargs)
 
         client_models = {k: v for k, v in models.__dict__.items() if isinstance(v, type)}
         self._serialize = Serializer(client_models)
@@ -68,15 +67,12 @@ class AlertsManagementClient(object):
         self.smart_detector_alert_rules = SmartDetectorAlertRulesOperations(
             self._client, self._config, self._serialize, self._deserialize)
 
-    def close(self):
-        # type: () -> None
-        self._client.close()
+    async def close(self) -> None:
+        await self._client.close()
 
-    def __enter__(self):
-        # type: () -> AlertsManagementClient
-        self._client.__enter__()
+    async def __aenter__(self) -> "AlertsManagementClient":
+        await self._client.__aenter__()
         return self
 
-    def __exit__(self, *exc_details):
-        # type: (Any) -> None
-        self._client.__exit__(*exc_details)
+    async def __aexit__(self, *exc_details) -> None:
+        await self._client.__aexit__(*exc_details)

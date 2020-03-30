@@ -8,19 +8,19 @@
 from typing import Any, Callable, Dict, Generic, Optional, TypeVar, Union
 import warnings
 
+from azure.core.async_paging import AsyncItemPaged, AsyncList
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, map_error
-from azure.core.paging import ItemPaged
 from azure.core.pipeline import PipelineResponse
-from azure.core.pipeline.transport import HttpRequest, HttpResponse
+from azure.core.pipeline.transport import AsyncHttpResponse, HttpRequest
 from azure.mgmt.core.exceptions import ARMErrorFormat
 
-from .. import models
+from ... import models
 
 T = TypeVar('T')
-ClsType = Optional[Callable[[PipelineResponse[HttpRequest, HttpResponse], T, Dict[str, Any]], Any]]
+ClsType = Optional[Callable[[PipelineResponse[HttpRequest, AsyncHttpResponse], T, Dict[str, Any]], Any]]
 
-class AlertsOperations(object):
-    """AlertsOperations operations.
+class AlertsOperations:
+    """AlertsOperations async operations.
 
     You should not instantiate this class directly. Instead, you should create a Client instance that
     instantiates it for you and attaches it as an attribute.
@@ -35,17 +35,16 @@ class AlertsOperations(object):
 
     models = models
 
-    def __init__(self, client, config, serializer, deserializer):
+    def __init__(self, client, config, serializer, deserializer) -> None:
         self._client = client
         self._serialize = serializer
         self._deserialize = deserializer
         self._config = config
 
-    def meta_data(
+    async def meta_data(
         self,
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.AlertsMetaData"
+        **kwargs
+    ) -> "models.AlertsMetaData":
         """List alerts meta data information based on value of identifier parameter.
 
         :keyword callable cls: A custom type or function that will be passed the direct response
@@ -72,7 +71,7 @@ class AlertsOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -89,26 +88,25 @@ class AlertsOperations(object):
 
     def get_all(
         self,
-        target_resource=None,  # type: Optional[str]
-        target_resource_type=None,  # type: Optional[str]
-        target_resource_group=None,  # type: Optional[str]
-        monitor_service=None,  # type: Optional[Union[str, "models.MonitorService"]]
-        monitor_condition=None,  # type: Optional[Union[str, "models.MonitorCondition"]]
-        severity=None,  # type: Optional[Union[str, "models.Severity"]]
-        alert_state=None,  # type: Optional[Union[str, "models.AlertState"]]
-        alert_rule=None,  # type: Optional[str]
-        smart_group_id=None,  # type: Optional[str]
-        include_context=None,  # type: Optional[bool]
-        include_egress_config=None,  # type: Optional[bool]
-        page_count=None,  # type: Optional[int]
-        sort_by=None,  # type: Optional[Union[str, "models.AlertsSortByFields"]]
-        sort_order=None,  # type: Optional[Union[str, "models.Enum5"]]
-        select=None,  # type: Optional[str]
-        time_range=None,  # type: Optional[Union[str, "models.TimeRange"]]
-        custom_time_range=None,  # type: Optional[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.AlertsList"
+        target_resource: Optional[str] = None,
+        target_resource_type: Optional[str] = None,
+        target_resource_group: Optional[str] = None,
+        monitor_service: Optional[Union[str, "models.MonitorService"]] = None,
+        monitor_condition: Optional[Union[str, "models.MonitorCondition"]] = None,
+        severity: Optional[Union[str, "models.Severity"]] = None,
+        alert_state: Optional[Union[str, "models.AlertState"]] = None,
+        alert_rule: Optional[str] = None,
+        smart_group_id: Optional[str] = None,
+        include_context: Optional[bool] = None,
+        include_egress_config: Optional[bool] = None,
+        page_count: Optional[int] = None,
+        sort_by: Optional[Union[str, "models.AlertsSortByFields"]] = None,
+        sort_order: Optional[Union[str, "models.Enum5"]] = None,
+        select: Optional[str] = None,
+        time_range: Optional[Union[str, "models.TimeRange"]] = None,
+        custom_time_range: Optional[str] = None,
+        **kwargs
+    ) -> "models.AlertsList":
         """List all existing alerts, where the results can be filtered on the basis of multiple parameters (e.g. time range). The results can then be sorted on the basis specific fields, with the default being lastModifiedDateTime.
 
         :param target_resource: Filter by target resource( which is full ARM ID) Default value is
@@ -226,17 +224,17 @@ class AlertsOperations(object):
             request = self._client.get(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('AlertsList', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -246,17 +244,16 @@ class AlertsOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     get_all.metadata = {'url': '/subscriptions/{subscriptionId}/providers/Microsoft.AlertsManagement/alerts'}
 
-    def get_by_id(
+    async def get_by_id(
         self,
-        alert_id,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Alert"
+        alert_id: str,
+        **kwargs
+    ) -> "models.Alert":
         """Get information related to a specific alert.
 
         Get a specific alert.
@@ -290,7 +287,7 @@ class AlertsOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -306,13 +303,12 @@ class AlertsOperations(object):
         return deserialized
     get_by_id.metadata = {'url': '/subscriptions/{subscriptionId}/providers/Microsoft.AlertsManagement/alerts/{alertId}'}
 
-    def change_state(
+    async def change_state(
         self,
-        alert_id,  # type: str
-        new_state,  # type: Union[str, "models.AlertState"]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Alert"
+        alert_id: str,
+        new_state: Union[str, "models.AlertState"],
+        **kwargs
+    ) -> "models.Alert":
         """Change the state of an alert.
 
         :param alert_id: Unique ID of an alert instance.
@@ -347,7 +343,7 @@ class AlertsOperations(object):
 
         # Construct and send request
         request = self._client.post(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -363,12 +359,11 @@ class AlertsOperations(object):
         return deserialized
     change_state.metadata = {'url': '/subscriptions/{subscriptionId}/providers/Microsoft.AlertsManagement/alerts/{alertId}/changestate'}
 
-    def get_history(
+    async def get_history(
         self,
-        alert_id,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.AlertModification"
+        alert_id: str,
+        **kwargs
+    ) -> "models.AlertModification":
         """Get the history of an alert, which captures any monitor condition changes (Fired/Resolved) and alert state changes (New/Acknowledged/Closed).
 
         :param alert_id: Unique ID of an alert instance.
@@ -400,7 +395,7 @@ class AlertsOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -416,23 +411,22 @@ class AlertsOperations(object):
         return deserialized
     get_history.metadata = {'url': '/subscriptions/{subscriptionId}/providers/Microsoft.AlertsManagement/alerts/{alertId}/history'}
 
-    def get_summary(
+    async def get_summary(
         self,
-        groupby,  # type: Union[str, "models.AlertsSummaryGroupByFields"]
-        include_smart_groups_count=None,  # type: Optional[bool]
-        target_resource=None,  # type: Optional[str]
-        target_resource_type=None,  # type: Optional[str]
-        target_resource_group=None,  # type: Optional[str]
-        monitor_service=None,  # type: Optional[Union[str, "models.MonitorService"]]
-        monitor_condition=None,  # type: Optional[Union[str, "models.MonitorCondition"]]
-        severity=None,  # type: Optional[Union[str, "models.Severity"]]
-        alert_state=None,  # type: Optional[Union[str, "models.AlertState"]]
-        alert_rule=None,  # type: Optional[str]
-        time_range=None,  # type: Optional[Union[str, "models.TimeRange"]]
-        custom_time_range=None,  # type: Optional[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.AlertsSummary"
+        groupby: Union[str, "models.AlertsSummaryGroupByFields"],
+        include_smart_groups_count: Optional[bool] = None,
+        target_resource: Optional[str] = None,
+        target_resource_type: Optional[str] = None,
+        target_resource_group: Optional[str] = None,
+        monitor_service: Optional[Union[str, "models.MonitorService"]] = None,
+        monitor_condition: Optional[Union[str, "models.MonitorCondition"]] = None,
+        severity: Optional[Union[str, "models.Severity"]] = None,
+        alert_state: Optional[Union[str, "models.AlertState"]] = None,
+        alert_rule: Optional[str] = None,
+        time_range: Optional[Union[str, "models.TimeRange"]] = None,
+        custom_time_range: Optional[str] = None,
+        **kwargs
+    ) -> "models.AlertsSummary":
         """Get a summarized count of your alerts grouped by various parameters (e.g. grouping by 'Severity' returns the count of alerts for each severity).
 
         :param groupby: This parameter allows the result set to be grouped by input fields (Maximum 2
@@ -518,7 +512,7 @@ class AlertsOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:

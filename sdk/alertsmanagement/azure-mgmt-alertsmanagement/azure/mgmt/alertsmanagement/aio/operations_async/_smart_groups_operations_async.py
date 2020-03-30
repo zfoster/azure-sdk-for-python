@@ -8,19 +8,19 @@
 from typing import Any, Callable, Dict, Generic, Optional, TypeVar, Union
 import warnings
 
+from azure.core.async_paging import AsyncItemPaged, AsyncList
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, map_error
-from azure.core.paging import ItemPaged
 from azure.core.pipeline import PipelineResponse
-from azure.core.pipeline.transport import HttpRequest, HttpResponse
+from azure.core.pipeline.transport import AsyncHttpResponse, HttpRequest
 from azure.mgmt.core.exceptions import ARMErrorFormat
 
-from .. import models
+from ... import models
 
 T = TypeVar('T')
-ClsType = Optional[Callable[[PipelineResponse[HttpRequest, HttpResponse], T, Dict[str, Any]], Any]]
+ClsType = Optional[Callable[[PipelineResponse[HttpRequest, AsyncHttpResponse], T, Dict[str, Any]], Any]]
 
-class SmartGroupsOperations(object):
-    """SmartGroupsOperations operations.
+class SmartGroupsOperations:
+    """SmartGroupsOperations async operations.
 
     You should not instantiate this class directly. Instead, you should create a Client instance that
     instantiates it for you and attaches it as an attribute.
@@ -35,7 +35,7 @@ class SmartGroupsOperations(object):
 
     models = models
 
-    def __init__(self, client, config, serializer, deserializer):
+    def __init__(self, client, config, serializer, deserializer) -> None:
         self._client = client
         self._serialize = serializer
         self._deserialize = deserializer
@@ -43,20 +43,19 @@ class SmartGroupsOperations(object):
 
     def get_all(
         self,
-        target_resource=None,  # type: Optional[str]
-        target_resource_group=None,  # type: Optional[str]
-        target_resource_type=None,  # type: Optional[str]
-        monitor_service=None,  # type: Optional[Union[str, "models.MonitorService"]]
-        monitor_condition=None,  # type: Optional[Union[str, "models.MonitorCondition"]]
-        severity=None,  # type: Optional[Union[str, "models.Severity"]]
-        smart_group_state=None,  # type: Optional[Union[str, "models.AlertState"]]
-        time_range=None,  # type: Optional[Union[str, "models.TimeRange"]]
-        page_count=None,  # type: Optional[int]
-        sort_by=None,  # type: Optional[Union[str, "models.SmartGroupsSortByFields"]]
-        sort_order=None,  # type: Optional[Union[str, "models.Enum5"]]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.SmartGroupsList"
+        target_resource: Optional[str] = None,
+        target_resource_group: Optional[str] = None,
+        target_resource_type: Optional[str] = None,
+        monitor_service: Optional[Union[str, "models.MonitorService"]] = None,
+        monitor_condition: Optional[Union[str, "models.MonitorCondition"]] = None,
+        severity: Optional[Union[str, "models.Severity"]] = None,
+        smart_group_state: Optional[Union[str, "models.AlertState"]] = None,
+        time_range: Optional[Union[str, "models.TimeRange"]] = None,
+        page_count: Optional[int] = None,
+        sort_by: Optional[Union[str, "models.SmartGroupsSortByFields"]] = None,
+        sort_order: Optional[Union[str, "models.Enum5"]] = None,
+        **kwargs
+    ) -> "models.SmartGroupsList":
         """List all the Smart Groups within a specified subscription.
 
         Get all Smart Groups within a specified subscription.
@@ -145,17 +144,17 @@ class SmartGroupsOperations(object):
             request = self._client.get(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('SmartGroupsList', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -165,17 +164,16 @@ class SmartGroupsOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     get_all.metadata = {'url': '/subscriptions/{subscriptionId}/providers/Microsoft.AlertsManagement/smartGroups'}
 
-    def get_by_id(
+    async def get_by_id(
         self,
-        smart_group_id,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.SmartGroup"
+        smart_group_id: str,
+        **kwargs
+    ) -> "models.SmartGroup":
         """Get information related to a specific Smart Group.
 
         Get information related to a specific Smart Group.
@@ -209,7 +207,7 @@ class SmartGroupsOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -227,13 +225,12 @@ class SmartGroupsOperations(object):
         return deserialized
     get_by_id.metadata = {'url': '/subscriptions/{subscriptionId}/providers/Microsoft.AlertsManagement/smartGroups/{smartGroupId}'}
 
-    def change_state(
+    async def change_state(
         self,
-        smart_group_id,  # type: str
-        new_state,  # type: Union[str, "models.AlertState"]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.SmartGroup"
+        smart_group_id: str,
+        new_state: Union[str, "models.AlertState"],
+        **kwargs
+    ) -> "models.SmartGroup":
         """Change the state of a Smart Group.
 
         :param smart_group_id: Smart group unique id.
@@ -268,7 +265,7 @@ class SmartGroupsOperations(object):
 
         # Construct and send request
         request = self._client.post(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -286,12 +283,11 @@ class SmartGroupsOperations(object):
         return deserialized
     change_state.metadata = {'url': '/subscriptions/{subscriptionId}/providers/Microsoft.AlertsManagement/smartGroups/{smartGroupId}/changeState'}
 
-    def get_history(
+    async def get_history(
         self,
-        smart_group_id,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.SmartGroupModification"
+        smart_group_id: str,
+        **kwargs
+    ) -> "models.SmartGroupModification":
         """Get the history a smart group, which captures any Smart Group state changes (New/Acknowledged/Closed) .
 
         :param smart_group_id: Smart group unique id.
@@ -323,7 +319,7 @@ class SmartGroupsOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
