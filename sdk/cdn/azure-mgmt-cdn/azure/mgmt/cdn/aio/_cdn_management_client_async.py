@@ -8,44 +8,44 @@
 
 from typing import Any, Optional
 
-from azure.mgmt.core import ARMPipelineClient
+from azure.mgmt.core import AsyncARMPipelineClient
 from msrest import Deserializer, Serializer
 
-from ._configuration import CdnManagementClientConfiguration
-from .operations import ProfilesOperations
-from .operations import EndpointsOperations
-from .operations import OriginsOperations
-from .operations import CustomDomainsOperations
-from .operations import CdnManagementClientOperationsMixin
-from .operations import ResourceUsageOperations
-from .operations import Operations
-from .operations import EdgeNodesOperations
-from .operations import PoliciesOperations
-from .operations import ManagedRuleSetsOperations
-from . import models
+from ._configuration_async import CdnManagementClientConfiguration
+from .operations_async import ProfilesOperations
+from .operations_async import EndpointsOperations
+from .operations_async import OriginsOperations
+from .operations_async import CustomDomainsOperations
+from .operations_async import CdnManagementClientOperationsMixin
+from .operations_async import ResourceUsageOperations
+from .operations_async import Operations
+from .operations_async import EdgeNodesOperations
+from .operations_async import PoliciesOperations
+from .operations_async import ManagedRuleSetsOperations
+from .. import models
 
 
 class CdnManagementClient(CdnManagementClientOperationsMixin):
     """Cdn Management Client.
 
     :ivar profiles: ProfilesOperations operations
-    :vartype profiles: azure.mgmt.cdn.operations.ProfilesOperations
+    :vartype profiles: azure.mgmt.cdn.aio.operations_async.ProfilesOperations
     :ivar endpoints: EndpointsOperations operations
-    :vartype endpoints: azure.mgmt.cdn.operations.EndpointsOperations
+    :vartype endpoints: azure.mgmt.cdn.aio.operations_async.EndpointsOperations
     :ivar origins: OriginsOperations operations
-    :vartype origins: azure.mgmt.cdn.operations.OriginsOperations
+    :vartype origins: azure.mgmt.cdn.aio.operations_async.OriginsOperations
     :ivar custom_domains: CustomDomainsOperations operations
-    :vartype custom_domains: azure.mgmt.cdn.operations.CustomDomainsOperations
+    :vartype custom_domains: azure.mgmt.cdn.aio.operations_async.CustomDomainsOperations
     :ivar resource_usage: ResourceUsageOperations operations
-    :vartype resource_usage: azure.mgmt.cdn.operations.ResourceUsageOperations
+    :vartype resource_usage: azure.mgmt.cdn.aio.operations_async.ResourceUsageOperations
     :ivar operations: Operations operations
-    :vartype operations: azure.mgmt.cdn.operations.Operations
+    :vartype operations: azure.mgmt.cdn.aio.operations_async.Operations
     :ivar edge_nodes: EdgeNodesOperations operations
-    :vartype edge_nodes: azure.mgmt.cdn.operations.EdgeNodesOperations
+    :vartype edge_nodes: azure.mgmt.cdn.aio.operations_async.EdgeNodesOperations
     :ivar policies: PoliciesOperations operations
-    :vartype policies: azure.mgmt.cdn.operations.PoliciesOperations
+    :vartype policies: azure.mgmt.cdn.aio.operations_async.PoliciesOperations
     :ivar managed_rule_sets: ManagedRuleSetsOperations operations
-    :vartype managed_rule_sets: azure.mgmt.cdn.operations.ManagedRuleSetsOperations
+    :vartype managed_rule_sets: azure.mgmt.cdn.aio.operations_async.ManagedRuleSetsOperations
     :param credential: Credential needed for the client to connect to Azure.
     :type credential: azure.core.credentials.TokenCredential
     :param subscription_id: Azure Subscription ID.
@@ -55,16 +55,15 @@ class CdnManagementClient(CdnManagementClientOperationsMixin):
 
     def __init__(
         self,
-        credential,  # type: "TokenCredential"
-        subscription_id,  # type: str
-        base_url=None,  # type: Optional[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> None
+        credential: "TokenCredential",
+        subscription_id: str,
+        base_url: Optional[str] = None,
+        **kwargs: Any
+    ) -> None:
         if not base_url:
             base_url = 'https://management.azure.com'
         self._config = CdnManagementClientConfiguration(credential, subscription_id, **kwargs)
-        self._client = ARMPipelineClient(base_url=base_url, config=self._config, **kwargs)
+        self._client = AsyncARMPipelineClient(base_url=base_url, config=self._config, **kwargs)
 
         client_models = {k: v for k, v in models.__dict__.items() if isinstance(v, type)}
         self._serialize = Serializer(client_models)
@@ -89,15 +88,12 @@ class CdnManagementClient(CdnManagementClientOperationsMixin):
         self.managed_rule_sets = ManagedRuleSetsOperations(
             self._client, self._config, self._serialize, self._deserialize)
 
-    def close(self):
-        # type: () -> None
-        self._client.close()
+    async def close(self) -> None:
+        await self._client.close()
 
-    def __enter__(self):
-        # type: () -> CdnManagementClient
-        self._client.__enter__()
+    async def __aenter__(self) -> "CdnManagementClient":
+        await self._client.__aenter__()
         return self
 
-    def __exit__(self, *exc_details):
-        # type: (Any) -> None
-        self._client.__exit__(*exc_details)
+    async def __aexit__(self, *exc_details) -> None:
+        await self._client.__aexit__(*exc_details)

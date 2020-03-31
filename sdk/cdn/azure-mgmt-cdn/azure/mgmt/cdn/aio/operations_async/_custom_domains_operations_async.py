@@ -8,21 +8,21 @@
 from typing import Any, Callable, Dict, Generic, Optional, TypeVar, Union
 import warnings
 
+from azure.core.async_paging import AsyncItemPaged, AsyncList
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, map_error
-from azure.core.paging import ItemPaged
 from azure.core.pipeline import PipelineResponse
-from azure.core.pipeline.transport import HttpRequest, HttpResponse
-from azure.core.polling import LROPoller, NoPolling, PollingMethod
+from azure.core.pipeline.transport import AsyncHttpResponse, HttpRequest
+from azure.core.polling import AsyncNoPolling, AsyncPollingMethod, async_poller
 from azure.mgmt.core.exceptions import ARMErrorFormat
-from azure.mgmt.core.polling.arm_polling import ARMPolling
+from azure.mgmt.core.polling.async_arm_polling import AsyncARMPolling
 
-from .. import models
+from ... import models
 
 T = TypeVar('T')
-ClsType = Optional[Callable[[PipelineResponse[HttpRequest, HttpResponse], T, Dict[str, Any]], Any]]
+ClsType = Optional[Callable[[PipelineResponse[HttpRequest, AsyncHttpResponse], T, Dict[str, Any]], Any]]
 
-class CustomDomainsOperations(object):
-    """CustomDomainsOperations operations.
+class CustomDomainsOperations:
+    """CustomDomainsOperations async operations.
 
     You should not instantiate this class directly. Instead, you should create a Client instance that
     instantiates it for you and attaches it as an attribute.
@@ -37,7 +37,7 @@ class CustomDomainsOperations(object):
 
     models = models
 
-    def __init__(self, client, config, serializer, deserializer):
+    def __init__(self, client, config, serializer, deserializer) -> None:
         self._client = client
         self._serialize = serializer
         self._deserialize = deserializer
@@ -45,12 +45,11 @@ class CustomDomainsOperations(object):
 
     def list_by_endpoint(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CustomDomainListResult"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        **kwargs
+    ) -> "models.CustomDomainListResult":
         """Lists all of the existing custom domains within an endpoint.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -94,17 +93,17 @@ class CustomDomainsOperations(object):
             request = self._client.get(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('CustomDomainListResult', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -114,20 +113,19 @@ class CustomDomainsOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     list_by_endpoint.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/customDomains'}
 
-    def get(
+    async def get(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        custom_domain_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CustomDomain"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        custom_domain_name: str,
+        **kwargs
+    ) -> "models.CustomDomain":
         """Gets an existing custom domain within an endpoint.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -168,7 +166,7 @@ class CustomDomainsOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -184,16 +182,15 @@ class CustomDomainsOperations(object):
         return deserialized
     get.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/customDomains/{customDomainName}'}
 
-    def _create_initial(
+    async def _create_initial(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        custom_domain_name,  # type: str
-        host_name=None,  # type: Optional[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CustomDomain"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        custom_domain_name: str,
+        host_name: Optional[str] = None,
+        **kwargs
+    ) -> "models.CustomDomain":
         cls = kwargs.pop('cls', None)  # type: ClsType["models.CustomDomain"]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
 
@@ -227,7 +224,7 @@ class CustomDomainsOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.put(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 201, 202]:
@@ -251,16 +248,15 @@ class CustomDomainsOperations(object):
         return deserialized
     _create_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/customDomains/{customDomainName}'}
 
-    def begin_create(
+    async def create(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        custom_domain_name,  # type: str
-        host_name=None,  # type: Optional[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CustomDomain"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        custom_domain_name: str,
+        host_name: Optional[str] = None,
+        **kwargs
+    ) -> "models.CustomDomain":
         """Creates a new custom domain within an endpoint.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -276,15 +272,15 @@ class CustomDomainsOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns CustomDomain
         :rtype: ~azure.core.polling.LROPoller[~azure.mgmt.cdn.models.CustomDomain]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType["models.CustomDomain"]
-        raw_result = self._create_initial(
+        raw_result = await self._create_initial(
             resource_group_name=resource_group_name,
             profile_name=profile_name,
             endpoint_name=endpoint_name,
@@ -305,21 +301,20 @@ class CustomDomainsOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_create.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/customDomains/{customDomainName}'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    create.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/customDomains/{customDomainName}'}
 
-    def _delete_initial(
+    async def _delete_initial(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        custom_domain_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CustomDomain"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        custom_domain_name: str,
+        **kwargs
+    ) -> "models.CustomDomain":
         cls = kwargs.pop('cls', None)  # type: ClsType["models.CustomDomain"]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
         api_version = "2019-06-15"
@@ -345,7 +340,7 @@ class CustomDomainsOperations(object):
 
         # Construct and send request
         request = self._client.delete(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 202, 204]:
@@ -363,15 +358,14 @@ class CustomDomainsOperations(object):
         return deserialized
     _delete_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/customDomains/{customDomainName}'}
 
-    def begin_delete(
+    async def delete(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        custom_domain_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CustomDomain"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        custom_domain_name: str,
+        **kwargs
+    ) -> "models.CustomDomain":
         """Deletes an existing custom domain within an endpoint.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -385,15 +379,15 @@ class CustomDomainsOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns None
         :rtype: ~azure.core.polling.LROPoller[None]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType["models.CustomDomain"]
-        raw_result = self._delete_initial(
+        raw_result = await self._delete_initial(
             resource_group_name=resource_group_name,
             profile_name=profile_name,
             endpoint_name=endpoint_name,
@@ -413,21 +407,20 @@ class CustomDomainsOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_delete.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/customDomains/{customDomainName}'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    delete.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/customDomains/{customDomainName}'}
 
-    def disable_custom_https(
+    async def disable_custom_https(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        custom_domain_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CustomDomain"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        custom_domain_name: str,
+        **kwargs
+    ) -> "models.CustomDomain":
         """Disable https delivery of the custom domain.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -468,7 +461,7 @@ class CustomDomainsOperations(object):
 
         # Construct and send request
         request = self._client.post(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 202]:
@@ -486,16 +479,15 @@ class CustomDomainsOperations(object):
         return deserialized
     disable_custom_https.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/customDomains/{customDomainName}/disableCustomHttps'}
 
-    def enable_custom_https(
+    async def enable_custom_https(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        custom_domain_name,  # type: str
-        custom_domain_https_parameters=None,  # type: Optional["models.CustomDomainHttpsParameters"]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CustomDomain"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        custom_domain_name: str,
+        custom_domain_https_parameters: Optional["models.CustomDomainHttpsParameters"] = None,
+        **kwargs
+    ) -> "models.CustomDomain":
         """Enable https delivery of the custom domain.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -549,7 +541,7 @@ class CustomDomainsOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.post(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 202]:

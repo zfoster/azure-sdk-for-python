@@ -8,21 +8,21 @@
 from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar, Union
 import warnings
 
+from azure.core.async_paging import AsyncItemPaged, AsyncList
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, map_error
-from azure.core.paging import ItemPaged
 from azure.core.pipeline import PipelineResponse
-from azure.core.pipeline.transport import HttpRequest, HttpResponse
-from azure.core.polling import LROPoller, NoPolling, PollingMethod
+from azure.core.pipeline.transport import AsyncHttpResponse, HttpRequest
+from azure.core.polling import AsyncNoPolling, AsyncPollingMethod, async_poller
 from azure.mgmt.core.exceptions import ARMErrorFormat
-from azure.mgmt.core.polling.arm_polling import ARMPolling
+from azure.mgmt.core.polling.async_arm_polling import AsyncARMPolling
 
-from .. import models
+from ... import models
 
 T = TypeVar('T')
-ClsType = Optional[Callable[[PipelineResponse[HttpRequest, HttpResponse], T, Dict[str, Any]], Any]]
+ClsType = Optional[Callable[[PipelineResponse[HttpRequest, AsyncHttpResponse], T, Dict[str, Any]], Any]]
 
-class EndpointsOperations(object):
-    """EndpointsOperations operations.
+class EndpointsOperations:
+    """EndpointsOperations async operations.
 
     You should not instantiate this class directly. Instead, you should create a Client instance that
     instantiates it for you and attaches it as an attribute.
@@ -37,7 +37,7 @@ class EndpointsOperations(object):
 
     models = models
 
-    def __init__(self, client, config, serializer, deserializer):
+    def __init__(self, client, config, serializer, deserializer) -> None:
         self._client = client
         self._serialize = serializer
         self._deserialize = deserializer
@@ -45,11 +45,10 @@ class EndpointsOperations(object):
 
     def list_by_profile(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.EndpointListResult"
+        resource_group_name: str,
+        profile_name: str,
+        **kwargs
+    ) -> "models.EndpointListResult":
         """Lists existing CDN endpoints.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -90,17 +89,17 @@ class EndpointsOperations(object):
             request = self._client.get(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('EndpointListResult', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -110,19 +109,18 @@ class EndpointsOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     list_by_profile.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints'}
 
-    def get(
+    async def get(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Endpoint"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        **kwargs
+    ) -> "models.Endpoint":
         """Gets an existing CDN endpoint with the specified endpoint name under the specified subscription, resource group and profile.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -160,7 +158,7 @@ class EndpointsOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -176,15 +174,14 @@ class EndpointsOperations(object):
         return deserialized
     get.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}'}
 
-    def _create_initial(
+    async def _create_initial(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        endpoint,  # type: "models.Endpoint"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Endpoint"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        endpoint: "models.Endpoint",
+        **kwargs
+    ) -> "models.Endpoint":
         cls = kwargs.pop('cls', None)  # type: ClsType["models.Endpoint"]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
         api_version = "2019-06-15"
@@ -215,7 +212,7 @@ class EndpointsOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.put(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 201, 202]:
@@ -239,15 +236,14 @@ class EndpointsOperations(object):
         return deserialized
     _create_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}'}
 
-    def begin_create(
+    async def create(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        endpoint,  # type: "models.Endpoint"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Endpoint"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        endpoint: "models.Endpoint",
+        **kwargs
+    ) -> "models.Endpoint":
         """Creates a new CDN endpoint with the specified endpoint name under the specified subscription, resource group and profile.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -261,15 +257,15 @@ class EndpointsOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns Endpoint
         :rtype: ~azure.core.polling.LROPoller[~azure.mgmt.cdn.models.Endpoint]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType["models.Endpoint"]
-        raw_result = self._create_initial(
+        raw_result = await self._create_initial(
             resource_group_name=resource_group_name,
             profile_name=profile_name,
             endpoint_name=endpoint_name,
@@ -289,21 +285,20 @@ class EndpointsOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_create.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    create.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}'}
 
-    def _update_initial(
+    async def _update_initial(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        endpoint_update_properties,  # type: "models.EndpointUpdateParameters"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Endpoint"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        endpoint_update_properties: "models.EndpointUpdateParameters",
+        **kwargs
+    ) -> "models.Endpoint":
         cls = kwargs.pop('cls', None)  # type: ClsType["models.Endpoint"]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
         api_version = "2019-06-15"
@@ -334,7 +329,7 @@ class EndpointsOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.patch(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 202]:
@@ -355,15 +350,14 @@ class EndpointsOperations(object):
         return deserialized
     _update_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}'}
 
-    def begin_update(
+    async def update(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        endpoint_update_properties,  # type: "models.EndpointUpdateParameters"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Endpoint"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        endpoint_update_properties: "models.EndpointUpdateParameters",
+        **kwargs
+    ) -> "models.Endpoint":
         """Updates an existing CDN endpoint with the specified endpoint name under the specified subscription, resource group and profile. Only tags and Origin HostHeader can be updated after creating an endpoint. To update origins, use the Update Origin operation. To update custom domains, use the Update Custom Domain operation.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -377,15 +371,15 @@ class EndpointsOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns Endpoint
         :rtype: ~azure.core.polling.LROPoller[~azure.mgmt.cdn.models.Endpoint]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType["models.Endpoint"]
-        raw_result = self._update_initial(
+        raw_result = await self._update_initial(
             resource_group_name=resource_group_name,
             profile_name=profile_name,
             endpoint_name=endpoint_name,
@@ -405,20 +399,19 @@ class EndpointsOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_update.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    update.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}'}
 
-    def _delete_initial(
+    async def _delete_initial(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> None
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        **kwargs
+    ) -> None:
         cls = kwargs.pop('cls', None)  # type: ClsType[None]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
         api_version = "2019-06-15"
@@ -442,7 +435,7 @@ class EndpointsOperations(object):
 
         # Construct and send request
         request = self._client.delete(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [202, 204]:
@@ -455,14 +448,13 @@ class EndpointsOperations(object):
 
     _delete_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}'}
 
-    def begin_delete(
+    async def delete(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> None
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        **kwargs
+    ) -> None:
         """Deletes an existing CDN endpoint with the specified endpoint name under the specified subscription, resource group and profile.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -474,15 +466,15 @@ class EndpointsOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns None
         :rtype: ~azure.core.polling.LROPoller[None]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType[None]
-        raw_result = self._delete_initial(
+        raw_result = await self._delete_initial(
             resource_group_name=resource_group_name,
             profile_name=profile_name,
             endpoint_name=endpoint_name,
@@ -498,20 +490,19 @@ class EndpointsOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_delete.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    delete.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}'}
 
-    def _start_initial(
+    async def _start_initial(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Endpoint"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        **kwargs
+    ) -> "models.Endpoint":
         cls = kwargs.pop('cls', None)  # type: ClsType["models.Endpoint"]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
         api_version = "2019-06-15"
@@ -536,7 +527,7 @@ class EndpointsOperations(object):
 
         # Construct and send request
         request = self._client.post(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 202]:
@@ -557,14 +548,13 @@ class EndpointsOperations(object):
         return deserialized
     _start_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/start'}
 
-    def begin_start(
+    async def start(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Endpoint"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        **kwargs
+    ) -> "models.Endpoint":
         """Starts an existing CDN endpoint that is on a stopped state.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -576,15 +566,15 @@ class EndpointsOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns Endpoint
         :rtype: ~azure.core.polling.LROPoller[~azure.mgmt.cdn.models.Endpoint]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType["models.Endpoint"]
-        raw_result = self._start_initial(
+        raw_result = await self._start_initial(
             resource_group_name=resource_group_name,
             profile_name=profile_name,
             endpoint_name=endpoint_name,
@@ -603,20 +593,19 @@ class EndpointsOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_start.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/start'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    start.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/start'}
 
-    def _stop_initial(
+    async def _stop_initial(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Endpoint"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        **kwargs
+    ) -> "models.Endpoint":
         cls = kwargs.pop('cls', None)  # type: ClsType["models.Endpoint"]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
         api_version = "2019-06-15"
@@ -641,7 +630,7 @@ class EndpointsOperations(object):
 
         # Construct and send request
         request = self._client.post(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 202]:
@@ -662,14 +651,13 @@ class EndpointsOperations(object):
         return deserialized
     _stop_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/stop'}
 
-    def begin_stop(
+    async def stop(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Endpoint"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        **kwargs
+    ) -> "models.Endpoint":
         """Stops an existing running CDN endpoint.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -681,15 +669,15 @@ class EndpointsOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns Endpoint
         :rtype: ~azure.core.polling.LROPoller[~azure.mgmt.cdn.models.Endpoint]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType["models.Endpoint"]
-        raw_result = self._stop_initial(
+        raw_result = await self._stop_initial(
             resource_group_name=resource_group_name,
             profile_name=profile_name,
             endpoint_name=endpoint_name,
@@ -708,21 +696,20 @@ class EndpointsOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_stop.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/stop'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    stop.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/stop'}
 
-    def _purge_content_initial(
+    async def _purge_content_initial(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        content_paths,  # type: List[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> None
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        content_paths: List[str],
+        **kwargs
+    ) -> None:
         cls = kwargs.pop('cls', None)  # type: ClsType[None]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
 
@@ -754,7 +741,7 @@ class EndpointsOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.post(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 202]:
@@ -767,15 +754,14 @@ class EndpointsOperations(object):
 
     _purge_content_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/purge'}
 
-    def begin_purge_content(
+    async def purge_content(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        content_paths,  # type: List[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> None
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        content_paths: List[str],
+        **kwargs
+    ) -> None:
         """Removes a content from CDN.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -790,15 +776,15 @@ class EndpointsOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns None
         :rtype: ~azure.core.polling.LROPoller[None]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType[None]
-        raw_result = self._purge_content_initial(
+        raw_result = await self._purge_content_initial(
             resource_group_name=resource_group_name,
             profile_name=profile_name,
             endpoint_name=endpoint_name,
@@ -815,21 +801,20 @@ class EndpointsOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_purge_content.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/purge'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    purge_content.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/purge'}
 
-    def _load_content_initial(
+    async def _load_content_initial(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        content_paths,  # type: List[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> None
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        content_paths: List[str],
+        **kwargs
+    ) -> None:
         cls = kwargs.pop('cls', None)  # type: ClsType[None]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
 
@@ -861,7 +846,7 @@ class EndpointsOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.post(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 202]:
@@ -874,15 +859,14 @@ class EndpointsOperations(object):
 
     _load_content_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/load'}
 
-    def begin_load_content(
+    async def load_content(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        content_paths,  # type: List[str]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> None
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        content_paths: List[str],
+        **kwargs
+    ) -> None:
         """Pre-loads a content to CDN. Available for Verizon Profiles.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -897,15 +881,15 @@ class EndpointsOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns None
         :rtype: ~azure.core.polling.LROPoller[None]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType[None]
-        raw_result = self._load_content_initial(
+        raw_result = await self._load_content_initial(
             resource_group_name=resource_group_name,
             profile_name=profile_name,
             endpoint_name=endpoint_name,
@@ -922,21 +906,20 @@ class EndpointsOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_load_content.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/load'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    load_content.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/load'}
 
-    def validate_custom_domain(
+    async def validate_custom_domain(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        host_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.ValidateCustomDomainOutput"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        host_name: str,
+        **kwargs
+    ) -> "models.ValidateCustomDomainOutput":
         """Validates the custom domain mapping to ensure it maps to the correct CDN endpoint in DNS.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -984,7 +967,7 @@ class EndpointsOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.post(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -1002,12 +985,11 @@ class EndpointsOperations(object):
 
     def list_resource_usage(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.ResourceUsageListResult"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        **kwargs
+    ) -> "models.ResourceUsageListResult":
         """Checks the quota and usage of geo filters and custom domains under the given endpoint.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -1051,17 +1033,17 @@ class EndpointsOperations(object):
             request = self._client.post(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('ResourceUsageListResult', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -1071,7 +1053,7 @@ class EndpointsOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     list_resource_usage.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/checkResourceUsage'}

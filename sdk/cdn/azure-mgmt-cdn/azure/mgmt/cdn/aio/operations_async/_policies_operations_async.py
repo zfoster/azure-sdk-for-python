@@ -8,21 +8,21 @@
 from typing import Any, Callable, Dict, Generic, Optional, TypeVar, Union
 import warnings
 
+from azure.core.async_paging import AsyncItemPaged, AsyncList
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, map_error
-from azure.core.paging import ItemPaged
 from azure.core.pipeline import PipelineResponse
-from azure.core.pipeline.transport import HttpRequest, HttpResponse
-from azure.core.polling import LROPoller, NoPolling, PollingMethod
+from azure.core.pipeline.transport import AsyncHttpResponse, HttpRequest
+from azure.core.polling import AsyncNoPolling, AsyncPollingMethod, async_poller
 from azure.mgmt.core.exceptions import ARMErrorFormat
-from azure.mgmt.core.polling.arm_polling import ARMPolling
+from azure.mgmt.core.polling.async_arm_polling import AsyncARMPolling
 
-from .. import models
+from ... import models
 
 T = TypeVar('T')
-ClsType = Optional[Callable[[PipelineResponse[HttpRequest, HttpResponse], T, Dict[str, Any]], Any]]
+ClsType = Optional[Callable[[PipelineResponse[HttpRequest, AsyncHttpResponse], T, Dict[str, Any]], Any]]
 
-class PoliciesOperations(object):
-    """PoliciesOperations operations.
+class PoliciesOperations:
+    """PoliciesOperations async operations.
 
     You should not instantiate this class directly. Instead, you should create a Client instance that
     instantiates it for you and attaches it as an attribute.
@@ -37,7 +37,7 @@ class PoliciesOperations(object):
 
     models = models
 
-    def __init__(self, client, config, serializer, deserializer):
+    def __init__(self, client, config, serializer, deserializer) -> None:
         self._client = client
         self._serialize = serializer
         self._deserialize = deserializer
@@ -45,10 +45,9 @@ class PoliciesOperations(object):
 
     def list(
         self,
-        resource_group_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CdnWebApplicationFirewallPolicyList"
+        resource_group_name: str,
+        **kwargs
+    ) -> "models.CdnWebApplicationFirewallPolicyList":
         """Lists all of the protection policies within a resource group.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -86,17 +85,17 @@ class PoliciesOperations(object):
             request = self._client.get(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('CdnWebApplicationFirewallPolicyList', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -106,18 +105,17 @@ class PoliciesOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     list.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/CdnWebApplicationFirewallPolicies'}
 
-    def get(
+    async def get(
         self,
-        resource_group_name,  # type: str
-        policy_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CdnWebApplicationFirewallPolicy"
+        resource_group_name: str,
+        policy_name: str,
+        **kwargs
+    ) -> "models.CdnWebApplicationFirewallPolicy":
         """Retrieve protection policy with specified name within a resource group.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -152,7 +150,7 @@ class PoliciesOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -168,14 +166,13 @@ class PoliciesOperations(object):
         return deserialized
     get.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/CdnWebApplicationFirewallPolicies/{policyName}'}
 
-    def _create_or_update_initial(
+    async def _create_or_update_initial(
         self,
-        resource_group_name,  # type: str
-        policy_name,  # type: str
-        cdn_web_application_firewall_policy,  # type: "models.CdnWebApplicationFirewallPolicy"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CdnWebApplicationFirewallPolicy"
+        resource_group_name: str,
+        policy_name: str,
+        cdn_web_application_firewall_policy: "models.CdnWebApplicationFirewallPolicy",
+        **kwargs
+    ) -> "models.CdnWebApplicationFirewallPolicy":
         cls = kwargs.pop('cls', None)  # type: ClsType["models.CdnWebApplicationFirewallPolicy"]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
         api_version = "2019-06-15"
@@ -205,7 +202,7 @@ class PoliciesOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.put(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 201, 202]:
@@ -229,14 +226,13 @@ class PoliciesOperations(object):
         return deserialized
     _create_or_update_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/CdnWebApplicationFirewallPolicies/{policyName}'}
 
-    def begin_create_or_update(
+    async def create_or_update(
         self,
-        resource_group_name,  # type: str
-        policy_name,  # type: str
-        cdn_web_application_firewall_policy,  # type: "models.CdnWebApplicationFirewallPolicy"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CdnWebApplicationFirewallPolicy"
+        resource_group_name: str,
+        policy_name: str,
+        cdn_web_application_firewall_policy: "models.CdnWebApplicationFirewallPolicy",
+        **kwargs
+    ) -> "models.CdnWebApplicationFirewallPolicy":
         """Create or update policy with specified rule set name within a resource group.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -248,15 +244,15 @@ class PoliciesOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns CdnWebApplicationFirewallPolicy
         :rtype: ~azure.core.polling.LROPoller[~azure.mgmt.cdn.models.CdnWebApplicationFirewallPolicy]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType["models.CdnWebApplicationFirewallPolicy"]
-        raw_result = self._create_or_update_initial(
+        raw_result = await self._create_or_update_initial(
             resource_group_name=resource_group_name,
             policy_name=policy_name,
             cdn_web_application_firewall_policy=cdn_web_application_firewall_policy,
@@ -275,20 +271,19 @@ class PoliciesOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_create_or_update.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/CdnWebApplicationFirewallPolicies/{policyName}'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    create_or_update.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/CdnWebApplicationFirewallPolicies/{policyName}'}
 
-    def _update_initial(
+    async def _update_initial(
         self,
-        resource_group_name,  # type: str
-        policy_name,  # type: str
-        tags=None,  # type: Optional[Dict[str, str]]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CdnWebApplicationFirewallPolicy"
+        resource_group_name: str,
+        policy_name: str,
+        tags: Optional[Dict[str, str]] = None,
+        **kwargs
+    ) -> "models.CdnWebApplicationFirewallPolicy":
         cls = kwargs.pop('cls', None)  # type: ClsType["models.CdnWebApplicationFirewallPolicy"]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
 
@@ -320,7 +315,7 @@ class PoliciesOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.patch(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 202]:
@@ -341,14 +336,13 @@ class PoliciesOperations(object):
         return deserialized
     _update_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/CdnWebApplicationFirewallPolicies/{policyName}'}
 
-    def begin_update(
+    async def update(
         self,
-        resource_group_name,  # type: str
-        policy_name,  # type: str
-        tags=None,  # type: Optional[Dict[str, str]]
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CdnWebApplicationFirewallPolicy"
+        resource_group_name: str,
+        policy_name: str,
+        tags: Optional[Dict[str, str]] = None,
+        **kwargs
+    ) -> "models.CdnWebApplicationFirewallPolicy":
         """Update an existing CdnWebApplicationFirewallPolicy with the specified policy name under the specified subscription and resource group.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -360,15 +354,15 @@ class PoliciesOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns CdnWebApplicationFirewallPolicy
         :rtype: ~azure.core.polling.LROPoller[~azure.mgmt.cdn.models.CdnWebApplicationFirewallPolicy]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType["models.CdnWebApplicationFirewallPolicy"]
-        raw_result = self._update_initial(
+        raw_result = await self._update_initial(
             resource_group_name=resource_group_name,
             policy_name=policy_name,
             tags=tags,
@@ -387,19 +381,18 @@ class PoliciesOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_update.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/CdnWebApplicationFirewallPolicies/{policyName}'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    update.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/CdnWebApplicationFirewallPolicies/{policyName}'}
 
-    def delete(
+    async def delete(
         self,
-        resource_group_name,  # type: str
-        policy_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> None
+        resource_group_name: str,
+        policy_name: str,
+        **kwargs
+    ) -> None:
         """Deletes Policy.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -433,7 +426,7 @@ class PoliciesOperations(object):
 
         # Construct and send request
         request = self._client.delete(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 204]:

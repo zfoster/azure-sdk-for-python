@@ -8,21 +8,21 @@
 from typing import Any, Callable, Dict, Generic, Optional, TypeVar, Union
 import warnings
 
+from azure.core.async_paging import AsyncItemPaged, AsyncList
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, map_error
-from azure.core.paging import ItemPaged
 from azure.core.pipeline import PipelineResponse
-from azure.core.pipeline.transport import HttpRequest, HttpResponse
-from azure.core.polling import LROPoller, NoPolling, PollingMethod
+from azure.core.pipeline.transport import AsyncHttpResponse, HttpRequest
+from azure.core.polling import AsyncNoPolling, AsyncPollingMethod, async_poller
 from azure.mgmt.core.exceptions import ARMErrorFormat
-from azure.mgmt.core.polling.arm_polling import ARMPolling
+from azure.mgmt.core.polling.async_arm_polling import AsyncARMPolling
 
-from .. import models
+from ... import models
 
 T = TypeVar('T')
-ClsType = Optional[Callable[[PipelineResponse[HttpRequest, HttpResponse], T, Dict[str, Any]], Any]]
+ClsType = Optional[Callable[[PipelineResponse[HttpRequest, AsyncHttpResponse], T, Dict[str, Any]], Any]]
 
-class OriginsOperations(object):
-    """OriginsOperations operations.
+class OriginsOperations:
+    """OriginsOperations async operations.
 
     You should not instantiate this class directly. Instead, you should create a Client instance that
     instantiates it for you and attaches it as an attribute.
@@ -37,7 +37,7 @@ class OriginsOperations(object):
 
     models = models
 
-    def __init__(self, client, config, serializer, deserializer):
+    def __init__(self, client, config, serializer, deserializer) -> None:
         self._client = client
         self._serialize = serializer
         self._deserialize = deserializer
@@ -45,12 +45,11 @@ class OriginsOperations(object):
 
     def list_by_endpoint(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.OriginListResult"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        **kwargs
+    ) -> "models.OriginListResult":
         """Lists all of the existing origins within an endpoint.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -94,17 +93,17 @@ class OriginsOperations(object):
             request = self._client.get(url, query_parameters, header_parameters)
             return request
 
-        def extract_data(pipeline_response):
+        async def extract_data(pipeline_response):
             deserialized = self._deserialize('OriginListResult', pipeline_response)
             list_of_elem = deserialized.value
             if cls:
                 list_of_elem = cls(list_of_elem)
-            return deserialized.next_link or None, iter(list_of_elem)
+            return deserialized.next_link or None, AsyncList(list_of_elem)
 
-        def get_next(next_link=None):
+        async def get_next(next_link=None):
             request = prepare_request(next_link)
 
-            pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+            pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
             response = pipeline_response.http_response
 
             if response.status_code not in [200]:
@@ -114,20 +113,19 @@ class OriginsOperations(object):
 
             return pipeline_response
 
-        return ItemPaged(
+        return AsyncItemPaged(
             get_next, extract_data
         )
     list_by_endpoint.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/origins'}
 
-    def get(
+    async def get(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        origin_name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Origin"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        origin_name: str,
+        **kwargs
+    ) -> "models.Origin":
         """Gets an existing origin within an endpoint.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -168,7 +166,7 @@ class OriginsOperations(object):
 
         # Construct and send request
         request = self._client.get(url, query_parameters, header_parameters)
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -184,16 +182,15 @@ class OriginsOperations(object):
         return deserialized
     get.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/origins/{originName}'}
 
-    def _update_initial(
+    async def _update_initial(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        origin_name,  # type: str
-        origin_update_properties,  # type: "models.OriginUpdateParameters"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Origin"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        origin_name: str,
+        origin_update_properties: "models.OriginUpdateParameters",
+        **kwargs
+    ) -> "models.Origin":
         cls = kwargs.pop('cls', None)  # type: ClsType["models.Origin"]
         error_map = kwargs.pop('error_map', {404: ResourceNotFoundError, 409: ResourceExistsError})
         api_version = "2019-06-15"
@@ -225,7 +222,7 @@ class OriginsOperations(object):
         body_content_kwargs['content'] = body_content
         request = self._client.patch(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200, 202]:
@@ -246,16 +243,15 @@ class OriginsOperations(object):
         return deserialized
     _update_initial.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/origins/{originName}'}
 
-    def begin_update(
+    async def update(
         self,
-        resource_group_name,  # type: str
-        profile_name,  # type: str
-        endpoint_name,  # type: str
-        origin_name,  # type: str
-        origin_update_properties,  # type: "models.OriginUpdateParameters"
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.Origin"
+        resource_group_name: str,
+        profile_name: str,
+        endpoint_name: str,
+        origin_name: str,
+        origin_update_properties: "models.OriginUpdateParameters",
+        **kwargs
+    ) -> "models.Origin":
         """Updates an existing origin within an endpoint.
 
         :param resource_group_name: Name of the Resource group within the Azure subscription.
@@ -271,15 +267,15 @@ class OriginsOperations(object):
         :keyword callable cls: A custom type or function that will be passed the direct response
         :keyword polling: True for ARMPolling, False for no polling, or a
          polling object for personal polling strategy
-        :paramtype polling: bool or ~azure.core.polling.PollingMethod
+        :paramtype polling: bool or ~azure.core.polling.AsyncPollingMethod
         :return: An instance of LROPoller that returns Origin
         :rtype: ~azure.core.polling.LROPoller[~azure.mgmt.cdn.models.Origin]
 
         :raises ~azure.core.exceptions.HttpResponseError:
         """
-        polling = kwargs.pop('polling', True)  # type: Union[bool, PollingMethod]
+        polling = kwargs.pop('polling', True)  # type: Union[bool, AsyncPollingMethod]
         cls = kwargs.pop('cls', None)  # type: ClsType["models.Origin"]
-        raw_result = self._update_initial(
+        raw_result = await self._update_initial(
             resource_group_name=resource_group_name,
             profile_name=profile_name,
             endpoint_name=endpoint_name,
@@ -300,8 +296,8 @@ class OriginsOperations(object):
             'polling_interval',
             self._config.polling_interval
         )
-        if polling is True: polling_method = ARMPolling(lro_delay,  **kwargs)
-        elif polling is False: polling_method = NoPolling()
+        if polling is True: polling_method = AsyncARMPolling(lro_delay,  **kwargs)
+        elif polling is False: polling_method = AsyncNoPolling()
         else: polling_method = polling
-        return LROPoller(self._client, raw_result, get_long_running_output, polling_method)
-    begin_update.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/origins/{originName}'}
+        return await async_poller(self._client, raw_result, get_long_running_output, polling_method)
+    update.metadata = {'url': '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Cdn/profiles/{profileName}/endpoints/{endpointName}/origins/{originName}'}

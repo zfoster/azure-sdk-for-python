@@ -10,22 +10,21 @@ import warnings
 
 from azure.core.exceptions import HttpResponseError, ResourceExistsError, ResourceNotFoundError, map_error
 from azure.core.pipeline import PipelineResponse
-from azure.core.pipeline.transport import HttpRequest, HttpResponse
+from azure.core.pipeline.transport import AsyncHttpResponse, HttpRequest
 from azure.mgmt.core.exceptions import ARMErrorFormat
 
-from .. import models
+from ... import models
 
 T = TypeVar('T')
-ClsType = Optional[Callable[[PipelineResponse[HttpRequest, HttpResponse], T, Dict[str, Any]], Any]]
+ClsType = Optional[Callable[[PipelineResponse[HttpRequest, AsyncHttpResponse], T, Dict[str, Any]], Any]]
 
-class CdnManagementClientOperationsMixin(object):
+class CdnManagementClientOperationsMixin:
 
-    def check_name_availability(
+    async def check_name_availability(
         self,
-        name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CheckNameAvailabilityOutput"
+        name: str,
+        **kwargs
+    ) -> "models.CheckNameAvailabilityOutput":
         """Check the availability of a resource name. This is needed for resources where name is globally unique, such as a CDN endpoint.
 
         :param name: The resource name to validate.
@@ -60,7 +59,7 @@ class CdnManagementClientOperationsMixin(object):
         body_content_kwargs['content'] = body_content
         request = self._client.post(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -76,12 +75,11 @@ class CdnManagementClientOperationsMixin(object):
         return deserialized
     check_name_availability.metadata = {'url': '/providers/Microsoft.Cdn/checkNameAvailability'}
 
-    def check_name_availability_with_subscription(
+    async def check_name_availability_with_subscription(
         self,
-        name,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.CheckNameAvailabilityOutput"
+        name: str,
+        **kwargs
+    ) -> "models.CheckNameAvailabilityOutput":
         """Check the availability of a resource name. This is needed for resources where name is globally unique, such as a CDN endpoint.
 
         :param name: The resource name to validate.
@@ -120,7 +118,7 @@ class CdnManagementClientOperationsMixin(object):
         body_content_kwargs['content'] = body_content
         request = self._client.post(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
@@ -136,12 +134,11 @@ class CdnManagementClientOperationsMixin(object):
         return deserialized
     check_name_availability_with_subscription.metadata = {'url': '/subscriptions/{subscriptionId}/providers/Microsoft.Cdn/checkNameAvailability'}
 
-    def validate_probe(
+    async def validate_probe(
         self,
-        probe_url,  # type: str
-        **kwargs  # type: Any
-    ):
-        # type: (...) -> "models.ValidateProbeOutput"
+        probe_url: str,
+        **kwargs
+    ) -> "models.ValidateProbeOutput":
         """Check if the probe path is a valid path and the file can be accessed. Probe path is the path to a file hosted on the origin server to help accelerate the delivery of dynamic content via the CDN endpoint. This path is relative to the origin path specified in the endpoint configuration.
 
         :param probe_url: The probe URL to validate.
@@ -180,7 +177,7 @@ class CdnManagementClientOperationsMixin(object):
         body_content_kwargs['content'] = body_content
         request = self._client.post(url, query_parameters, header_parameters, **body_content_kwargs)
 
-        pipeline_response = self._client._pipeline.run(request, stream=False, **kwargs)
+        pipeline_response = await self._client._pipeline.run(request, stream=False, **kwargs)
         response = pipeline_response.http_response
 
         if response.status_code not in [200]:
