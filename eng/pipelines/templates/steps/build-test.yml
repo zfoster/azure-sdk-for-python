@@ -30,6 +30,7 @@ steps:
   - script: |
       python -m pip install pip == 20.0.2
       pip install -r eng/ci_tools.txt
+      pip --version
     displayName: 'Prep Environment'
 
   - ${{ parameters.BeforeTestSteps }}
