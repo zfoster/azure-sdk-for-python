@@ -62,10 +62,7 @@ param (
     [switch] $CI = ($null -ne $env:SYSTEM_TEAMPROJECTID),
 
     [Parameter()]
-    [switch] $Force,
-
-    [Parameter()]
-    [switch] $OutFile
+    [switch] $Force
 )
 
 # By default stop for any error.
@@ -111,8 +108,7 @@ trap {
 }
 
 # Enumerate test resources to deploy. Fail if none found.
-$repositoryRoot = "$PSScriptRoot/../../.." | Resolve-Path
-$root = [System.IO.Path]::Combine($repositoryRoot, "sdk", $ServiceDirectory) | Resolve-Path
+$root = [System.IO.Path]::Combine("$PSScriptRoot/../../../sdk", $ServiceDirectory) | Resolve-Path
 $templateFileName = 'test-resources.json'
 $templateFiles = @()
 
@@ -286,6 +282,11 @@ foreach ($templateFile in $templateFiles) {
         Write-Verbose "Successfully deployed template '$templateFile' to resource group '$($resourceGroup.ResourceGroupName)'"
     }
 
+    if ($deployment.Outputs.Count -and !$CI) {
+        # Write an extra new line to isolate the environment variables for easy reading.
+        Log "Persist the following environment variables based on your detected shell ($shell):`n"
+    }
+
     $serviceDirectoryPrefix = $serviceName.ToUpperInvariant() + "_"
 
     $context = Get-AzContext;
@@ -298,7 +299,7 @@ foreach ($templateFile in $templateFiles) {
         "$($serviceDirectoryPrefix)SUBSCRIPTION_ID" =  $context.Subscription.Id;
         "$($serviceDirectoryPrefix)RESOURCE_GROUP" = $resourceGroup.ResourceGroupName;
         "$($serviceDirectoryPrefix)LOCATION" = $resourceGroup.Location;
-        "$($serviceDirectoryPrefix)ENVIRONMENT" = $context.Environment.Name;
+        "$($serviceDirectoryPrefix)ENVIRONMENT" = $context.Environment;
     }
 
     foreach ($key in $deployment.Outputs.Keys) {
@@ -312,51 +313,25 @@ foreach ($templateFile in $templateFiles) {
         }
     }
 
-    if ($OutFile)
+    foreach ($key in $deploymentOutputs.Keys)
     {
-        if (!$IsWindows)
-        {
-            Write-Host "File option is supported only on Windows"
-        }
-
-        $outputFile = "$templateFile.env"
-
-        $environmentText = $deploymentOutputs | ConvertTo-Json;
-        $bytes = ([System.Text.Encoding]::UTF8).GetBytes($environmentText)
-        $protectedBytes = [Security.Cryptography.ProtectedData]::Protect($bytes, $null, [Security.Cryptography.DataProtectionScope]::CurrentUser)
-
-        Set-Content $outputFile -Value $protectedBytes -AsByteStream -Force
-
-        Write-Host "Test environment settings`n $environmentText`nstored into encrypted $outputFile"
-    }
-    else
-    {
+        $value = $deploymentOutputs[$key]
         
-        if (!$CI) {
-            # Write an extra new line to isolate the environment variables for easy reading.
-            Log "Persist the following environment variables based on your detected shell ($shell):`n"
+        if ($CI) {
+            # Treat all ARM template output variables as secrets since "SecureString" variables do not set values.
+            # In order to mask secrets but set environment variables for any given ARM template, we set variables twice as shown below.
+            Write-Host "Setting variable '$key': ***"
+            Write-Host "##vso[task.setvariable variable=_$key;issecret=true;]$($value)"
+            Write-Host "##vso[task.setvariable variable=$key;]$($value)"
+        } else {
+            Write-Host ($shellExportFormat -f $key, $value)
         }
+    }
 
-        foreach ($key in $deploymentOutputs.Keys)
-        {
-            $value = $deploymentOutputs[$key]
-            
-            if ($CI) {
-                # Treat all ARM template output variables as secrets since "SecureString" variables do not set values.
-                # In order to mask secrets but set environment variables for any given ARM template, we set variables twice as shown below.
-                Write-Host "Setting variable '$key': ***"
-                Write-Host "##vso[task.setvariable variable=_$key;issecret=true;]$($value)"
-                Write-Host "##vso[task.setvariable variable=$key;]$($value)"
-            } else {
-                Write-Host ($shellExportFormat -f $key, $value)
-            }
-        }
-
-        if ($key) {
-            # Isolate the environment variables for easy reading.
-            Write-Host "`n"
-            $key = $null
-        }
+    if ($key) {
+        # Isolate the environment variables for easy reading.
+        Write-Host "`n"
+        $key = $null
     }
 
     $postDeploymentScript = $templateFile | Split-Path | Join-Path -ChildPath 'test-resources-post.ps1'
@@ -486,10 +461,6 @@ Deployment (CI/CD) build (only Azure Pipelines is currently supported).
 
 .PARAMETER Force
 Force creation of resources instead of being prompted.
-
-.PARAMETER OutFile
-Save test environment settings into a test-resources.json.env file next to test-resources.json. File is protected via DPAPI. Supported only on windows.
-The environment file would be scoped to the current repository directory.
 
 .EXAMPLE
 Connect-AzAccount -Subscription "REPLACE_WITH_SUBSCRIPTION_ID"
