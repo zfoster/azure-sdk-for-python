@@ -49,6 +49,6 @@ steps:
     PRTitle: "Docs.MS Readme Update."
     BaseBranchName: smoke-test
     WorkingDirectory: ${{parameters.WorkingDirectory}}/repo
-
+    ScriptDirectory: ${{parameters.WorkingDirectory}}/${{parameters.ScriptDirectory}}
 
 
