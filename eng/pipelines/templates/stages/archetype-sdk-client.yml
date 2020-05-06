@@ -27,5 +27,5 @@ stages:
         Artifacts: ${{parameters.Artifacts}}
         ArtifactName: packages
         DocArtifact: documentation
-        TargetDocRepoOwner: ${{parameters.TargetDocRepo}}
-        TargetDocRepoName: ${{parameters.TargetDocRepo}}
+        TargetDocRepoOwner: ${{parameters.TargetDocRepoOwner}}
+        TargetDocRepoName: ${{parameters.TargetDocRepoName}}
