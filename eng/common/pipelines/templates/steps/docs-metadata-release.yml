@@ -15,10 +15,10 @@ parameters:
 
 steps:
 - pwsh: |
-    git clone https://github.com${{ parameters.TargetDocRepo }} ${{ parameters.WorkingDirectory }}/repo
+    git clone https://github.com/${{ parameters.TargetDocRepo }} ${{ parameters.WorkingDirectory }}/repo
     
     try {
-      Push-Location {{ parameters.WorkingDirectory }}/repo
+      Push-Location ${{ parameters.WorkingDirectory }}/repo
     
       Write-Host "git checkout smoke-test"
       git checkout smoke-test
