@@ -3,7 +3,9 @@ parameters:
   ArtifactName: 'not-specified'
   DependsOn: Build
   DocArtifact: 'documentation'
-  TargetDocRepo: ''
+  TargetDocRepoOwner: ''
+  TargetDocRepoName: ''
+
 
 stages:
   - ${{if and(eq(variables['Build.Reason'], 'Manual'), eq(variables['System.TeamProject'], 'internal'))}}:
@@ -73,6 +75,8 @@ stages:
                         RepoId: Azure/azure-sdk-for-python
                         WorkingDirectory: $(System.DefaultWorkingDirectory)
                         TargetDocRepo: 'MicrosoftDocs/azure-docs-sdk-python'
+                        TargetDocRepoOwner: ${{parameters.TargetDocRepoOwner}}
+                        TargetDocRepoName: ${{parameters.TargetDocRepoName}}
                         PRBranchName: 'smoke-test-rdme'
                         ArtifactName: ${{parameters.ArtifactName}}
                         Language: 'python'

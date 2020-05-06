@@ -6,7 +6,8 @@ parameters:
   RepoId: 'not-specified'
   WorkingDirectory: ''
   ScriptDirectory: eng/common/scripts
-  TargetDocRepo: ''
+  TargetDocRepoName: ''
+  TargetDocRepoOwner: ''
   PRBranchName: 'smoke-test-rdme'
   ArtifactName: ''
   Language: ''
@@ -15,7 +16,7 @@ parameters:
 
 steps:
 - pwsh: |
-    git clone https://github.com/${{ parameters.TargetDocRepo }} ${{ parameters.WorkingDirectory }}/repo
+    git clone https://github.com/${{ parameters.TargetDocRepoOwner }}/${{ parameters.TargetDocRepoName }} ${{ parameters.WorkingDirectory }}/repo
     
     try {
       Push-Location ${{ parameters.WorkingDirectory }}/repo
@@ -41,7 +42,8 @@ steps:
 
 - template: /eng/common/pipelines/templates/steps/create-pull-request.yml
   parameters:
-    RepoName: ${{ parameters.TargetDocRepo }}
+    RepoName: ${{ parameters.TargetDocRepoName }}
+    RepoOwner: ${{ parameters.TargetDocRepoOwner }}
     PRBranchName: ${{ parameters.PRBranchName }}
     CommitMsg: "Increment package version after release of ${{ parameters.ArtifactName }}"
     PRTitle: "Docs.MS Readme Update."
