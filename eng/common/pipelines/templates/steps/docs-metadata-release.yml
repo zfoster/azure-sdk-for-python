@@ -15,7 +15,7 @@ parameters:
 
 steps:
 - pwsh: |
-    git clone ${{ TargetDocRepo }} ${{ parameters.WorkingDirectory }}/repo
+    git clone ${{ parameters.TargetDocRepo }} ${{ parameters.WorkingDirectory }}/repo
     
     try {
       Push-Location {{ parameters.WorkingDirectory }}/repo
